@@ -3,20 +3,34 @@ import "./App.css";
 import Celda from "./Componentes/Celda/celda";
 import Fila from "./Componentes/fila/fila";
 
-function App() {
-  const [dato, setDato] = useState([
-    [false, true, true, false, false, true],
-    [false, false, true, false, false, true],
-    [false, true, true, true, false, true],
-    [false, true, false, false, false, false],
-    [false, false, true, false, false, true],
-    [false, true, true, true, false, false],
-  ]);
+const GRANDE = 35;
 
-  const datosTransformados = dato.map((fila) => (
-    <Fila>
-      {fila.map((celda) => (
-        <Celda vivo={celda}></Celda>
+
+const crearDato = () => {
+  let nuevoDato = [];
+  for (let i = 0; i < GRANDE; i++) {
+    nuevoDato[i] = new Array(GRANDE).fill(false)
+  }
+  return nuevoDato;
+}
+
+
+function App() {
+  const [dato, setDato] = useState(crearDato());
+
+  const invertir = (numFila, numColumna) => {
+    // ver el valor de la celda
+    const valor = dato[numFila][numColumna];
+    // guardar el valor contrario
+    const nuevoDato = [...dato];
+    nuevoDato[numFila][numColumna] = !valor;
+    setDato(nuevoDato)
+  }
+
+  const datosTransformados = dato.map((fila,numFila) => (
+    <Fila key={numFila}>
+      {fila.map((celda,numColumna) => (
+        <Celda key={numColumna} vivo={celda} onClick={() => invertir(numFila,numColumna)}></Celda>
       ))}
     </Fila>
   ));
@@ -24,9 +38,9 @@ function App() {
   const corregirNumero = (numero) => {
     let n = numero;
     if (n < 0){
-      n += 6;
+      n += GRANDE;
     }
-    return n % 6;
+    return n % GRANDE;
   }
   
   const calcVecinos = (datoActual, numFila, numColumna) => {
@@ -42,18 +56,23 @@ function App() {
   }
 
   const siguiente = (datoActual) => {
-    const nuevoDato = [...datoActual]
+    const nuevoDato = crearDato()
 
     //hacemos cosas
-    for (const numFila in datoActual) {
+    for (const numFilaStr in datoActual) {
+        const numFila = parseInt(numFilaStr)
         const fila = datoActual[numFila];
-        for (const numColumna in fila) {          
+        for (const numColumnaStr in fila) {
+            const numColumna = parseInt(numColumnaStr)
             const celda = fila[numColumna];   
             const cantVecinos = calcVecinos(datoActual, numFila, numColumna)       
+
             if (celda && (cantVecinos < 2 || cantVecinos >3)){
               nuevoDato[numFila][numColumna] = false
             }else if(!celda && cantVecinos === 3){
               nuevoDato[numFila][numColumna] = true
+            }else{
+              nuevoDato[numFila][numColumna] = datoActual[numFila][numColumna]
             }
         }
     }
@@ -63,7 +82,13 @@ function App() {
 
   return <div>
     {datosTransformados}
-    <button onClick={()=> setDato(siguiente(dato))}>siguiente</button>
+    <button onClick={()=> {
+
+      setInterval(()=>{
+        setDato((dato) => siguiente(dato))
+      },50)
+
+    }}>siguiente</button>
   </div>;
 }
 
